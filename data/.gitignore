@@ -11,6 +11,11 @@ notebooks/cifar_net.pth
 *.pptx
 *.zip
 *.csv
+*.tar.gz
+*.txt
+*.wav
+*.TextGrid
+
 
 # IPython
 profile_default/
