@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from itertools import product
 
-def plotItem(dataframe, category, name, type, rotate = False, all_provided = pd.DataFrame()):
+def plotItem(dataframe, category, name, type, rotate = False, all_provided = pd.DataFrame(), colors = ()):
     item = sorted(dataframe[category].unique().tolist())
     if all_provided.__len__() != 0:
         item = sorted(all_provided[category].unique().tolist())
@@ -14,17 +14,37 @@ def plotItem(dataframe, category, name, type, rotate = False, all_provided = pd.
         item_count.append(counter)
 
     if type == 'pie':
-        plt.pie(
-            item_count,
-            labels=item,
-            autopct='%1.1f%%',
-        )
+        if len(colors) == len(item):
+            plt.pie(
+                item_count,
+                labels=item,
+                autopct='%1.1f%%',
+                colors=colors
+            )
+        else:
+            plt.pie(
+                item_count,
+                labels=item,
+                autopct='%1.1f%%'
+            )
         plt.title(f"{category} in {name} Dataset")
         plt.show()
     
     if type == 'bar':
         x_coords = np.arange(len(item_count))
-        plt.bar(x_coords, item_count, tick_label=item)
+        if len(colors) == len(item):
+            plt.bar(
+                x_coords, 
+                item_count, 
+                tick_label=item,
+                color=list(colors),
+                )
+        else:
+            plt.bar(
+                x_coords, 
+                item_count, 
+                tick_label=item
+                )
         if rotate == True:
             plt.xticks(rotation=90)
         plt.ylabel('Samples')
@@ -81,7 +101,7 @@ def TestTrainScore(test_proportion, dataframe):
     idx = int(len(pareto_list)*(1-test_proportion))
     return pareto_list[idx]
 
-def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, plot = False):
+def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, plot = False, colors = []):
     weight_matrix_update = []
     for i in weight_matrix:
         grab_list = []
@@ -102,6 +122,7 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
 
     max_idx = 0
     max_score = 0
+    min_score = 10000000
     for idx in range(len(complete_set)):
         dataframe = UniquenessScoreGenerate(dataframe, category_list, complete_set[idx][0])
         dataframe = ParetoScoreGenerate(dataframe)
@@ -109,6 +130,8 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
         if complete_set[idx][1] > max_score:
             max_score = complete_set[idx][1]
             max_idx = idx
+        if complete_set[idx][1] < min_score:
+            min_score = complete_set[idx][1]
     
     if plot == True:
         score_list = []
@@ -116,10 +139,38 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
             score_list.append(i[1])
         iter_list = [i for i in range(len(score_list))]
 
-        plt.plot(
-        iter_list,
-        score_list
-        )
+        total_range = max_score - min_score
+        percentile_80 = min_score + 0.8*total_range
+        percentile_60 = min_score + 0.6*total_range
+        percentile_40 = min_score + 0.4*total_range
+        percentile_20 = min_score + 0.2*total_range
+        top_80 = [val>percentile_80 for val in score_list]
+        top_60 = [val>percentile_60 and val<percentile_80 for val in score_list]
+        top_40 = [val>percentile_40 and val<percentile_60 for val in score_list]
+        top_20 = [val>percentile_20 and val<percentile_40 for val in score_list]
+        bottom_20 = [val<percentile_20 for val in score_list]
+        if len(colors) == 5:
+            plt.scatter([xv for xv, ygt in zip(iter_list, bottom_20) if ygt],
+                        [yv for yv, ygt in zip(score_list, bottom_20) if ygt], color=colors[0])
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_20) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_20) if ygt], color=colors[1]) 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_40) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_40) if ygt], color=colors[2]) 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_60) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_60) if ygt], color=colors[3]) 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_80) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_80) if ygt], color=colors[4]) 
+        else:
+            plt.scatter([xv for xv, ygt in zip(iter_list, bottom_20) if ygt],
+                        [yv for yv, ygt in zip(score_list, bottom_20) if ygt], color='blue')
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_20) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_20) if ygt], color='green') 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_40) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_40) if ygt], color='orange') 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_60) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_60) if ygt], color='yellow') 
+            plt.scatter([xv for xv, ygt in zip(iter_list, top_80) if ygt],
+                        [yv for yv, ygt in zip(score_list, top_80) if ygt], color='red') 
         plt.title("Evaluating Bias")
         plt.ylabel("Percentage of data covered by training set")
         plt.xlabel("Test")
@@ -127,5 +178,31 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
 
     return complete_set[max_idx], complete_set
 
-
-    
+def RecursiveGridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, plot = False):
+    best_set, complete_set = GridSearchWeights(dataframe, 
+                                               category_list, 
+                                               weight_matrix, 
+                                               test_proportion, 
+                                               plot, 
+                                               colors = ['#409CFF', '#7D7AFF', '#BF5AF2', '#8944AB', '#FF375F'])
+    for i in range(len(weight_matrix)):
+        weight_matrix[i][0] = best_set[0][i]-4
+        weight_matrix[i][1] = best_set[0][i]+5
+        weight_matrix[i][2] = 1    
+    best_set, complete_set = GridSearchWeights(dataframe, 
+                                               category_list, 
+                                               weight_matrix, 
+                                               test_proportion, 
+                                               plot, 
+                                               colors = ['#DA8FFF', '#8944AB', '#FF6482', '#FF375F', '#D30F45'])
+    for i in range(len(weight_matrix)):
+        weight_matrix[i][0] = best_set[0][i]-0.5
+        weight_matrix[i][1] = best_set[0][i]+0.5
+        weight_matrix[i][2] = 0.1  
+    best_set, complete_set = GridSearchWeights(dataframe, 
+                                               category_list, 
+                                               weight_matrix, 
+                                               test_proportion, 
+                                               plot, 
+                                               colors = ['#FF6482', '#FF6961', '#FF375F', '#D30F45', '#FF0015'])
+    return best_set, complete_set
