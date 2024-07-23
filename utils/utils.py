@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from itertools import product
+import re
 
 def plotItem(dataframe, category, name, type, rotate = False, all_provided = pd.DataFrame(), colors = ()):
     item = sorted(dataframe[category].unique().tolist())
@@ -70,7 +71,7 @@ def ratiosDictionary(labels, dataframe, category):
 def WeightUniquenessScoreCalculate(x, weight, ratios_dictionary):
     return (1-ratios_dictionary[x])*weight
 
-def UniquenessScoreGenerate(dataframe, category_list, weight_list):
+def CategoricalUniquenessScoreGenerate(dataframe, category_list, weight_list):
     if len(category_list) == len(weight_list):
         new_dataframe_labels = []
         for idx in range(len(category_list)):
@@ -101,7 +102,7 @@ def TestTrainScore(test_proportion, dataframe):
     idx = int(len(pareto_list)*(1-test_proportion))
     return pareto_list[idx]
 
-def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, plot = False, colors = []):
+def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, plot = False, colors = [], title = 0):
     weight_matrix_update = []
     for i in weight_matrix:
         grab_list = []
@@ -124,7 +125,7 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
     max_score = 0
     min_score = 10000000
     for idx in range(len(complete_set)):
-        dataframe = UniquenessScoreGenerate(dataframe, category_list, complete_set[idx][0])
+        dataframe = CategoricalUniquenessScoreGenerate(dataframe, category_list, complete_set[idx][0])
         dataframe = ParetoScoreGenerate(dataframe)
         complete_set[idx][1] = TestTrainScore(test_proportion, dataframe)
         if complete_set[idx][1] > max_score:
@@ -170,8 +171,11 @@ def GridSearchWeights(dataframe, category_list, weight_matrix, test_proportion, 
             plt.scatter([xv for xv, ygt in zip(iter_list, top_60) if ygt],
                         [yv for yv, ygt in zip(score_list, top_60) if ygt], color='yellow') 
             plt.scatter([xv for xv, ygt in zip(iter_list, top_80) if ygt],
-                        [yv for yv, ygt in zip(score_list, top_80) if ygt], color='red') 
-        plt.title("Evaluating Bias")
+                        [yv for yv, ygt in zip(score_list, top_80) if ygt], color='red')
+        if title != 0:
+            plt.title(title)
+        else:
+            plt.title("Evaluating Bias")
         plt.ylabel("Percentage of data covered by training set")
         plt.xlabel("Test")
         plt.show()
@@ -184,7 +188,8 @@ def RecursiveGridSearchWeights(dataframe, category_list, weight_matrix, test_pro
                                                weight_matrix, 
                                                test_proportion, 
                                                plot, 
-                                               colors = ['#409CFF', '#7D7AFF', '#BF5AF2', '#8944AB', '#FF375F'])
+                                               colors = ['#409CFF', '#7D7AFF', '#BF5AF2', '#8944AB', '#FF375F'],
+                                               title = 'First Pass: Resolution of 5%')
     for i in range(len(weight_matrix)):
         weight_matrix[i][0] = best_set[0][i]-4
         weight_matrix[i][1] = best_set[0][i]+5
@@ -194,7 +199,8 @@ def RecursiveGridSearchWeights(dataframe, category_list, weight_matrix, test_pro
                                                weight_matrix, 
                                                test_proportion, 
                                                plot, 
-                                               colors = ['#DA8FFF', '#8944AB', '#FF6482', '#FF375F', '#D30F45'])
+                                               colors = ['#DA8FFF', '#8944AB', '#FF6482', '#FF375F', '#D30F45'],
+                                               title = 'Second Pass: Resolution of 1%')
     for i in range(len(weight_matrix)):
         weight_matrix[i][0] = best_set[0][i]-0.5
         weight_matrix[i][1] = best_set[0][i]+0.5
@@ -204,5 +210,58 @@ def RecursiveGridSearchWeights(dataframe, category_list, weight_matrix, test_pro
                                                weight_matrix, 
                                                test_proportion, 
                                                plot, 
-                                               colors = ['#FF6482', '#FF6961', '#FF375F', '#D30F45', '#FF0015'])
+                                               colors = ['#FF6482', '#FF6961', '#FF375F', '#D30F45', '#FF0015'],
+                                               title = 'Third Pass: Resolution of 0.1%')
     return best_set, complete_set
+
+def clean_content(content):
+    # Remove anything within [ … ], / … /, < … >, and ( … )
+    content = re.sub(r'\[.*?\]|\<.*?\>|\/.*?\/|\(.*?\)', '', content)
+    # Remove special symbols while keeping punctuation marks
+    content = re.sub(r'[^a-zA-Z0-9\s]', '', content)
+    # Capitalize all text
+    content = content.upper()
+    # Strip leading and trailing whitespaces
+    content = content.strip()
+    return content
+
+def WordsUniquenessScoreGenerate(dataframe, column_name):
+    dataframe[column_name] = dataframe[column_name].apply(clean_content)
+    dataframe = dataframe[dataframe[column_name] != '']
+
+    def grabWords(string):
+        return string.split()
+
+    dataframe['Transcript_Words'] = dataframe[column_name].apply(lambda x: grabWords(x))
+    spoken_matrix = dataframe['Transcript_Words'].to_list()
+
+    all_spoken_words = []
+    for i in spoken_matrix:
+        for j in range(len(i)):
+            all_spoken_words.append(i[j])
+
+    def unique(list1):
+        unique_dictionary = {}
+        for x in list1:
+            if x not in unique_dictionary:
+                unique_dictionary.update({x : 1})
+            if x in unique_dictionary:
+                unique_dictionary[x] += 1
+        return unique_dictionary
+
+    spoken_unique_words = unique(all_spoken_words)
+
+    sorted_spoken_unique_words = dict(sorted(spoken_unique_words.items(), key=lambda item: item[1], reverse=True))
+
+    amount_of_words = len(all_spoken_words)
+
+    def phraseUniqueScore(sorted_spoken_unique_words, all_spoken_words, amount_of_words):
+        list_of_scores = []
+        for i in all_spoken_words:
+            list_of_scores.append(sorted_spoken_unique_words[i] / amount_of_words)
+        return sum(list_of_scores)
+
+    dataframe['Words_US'] = dataframe['Transcript_Words'].apply(lambda x: phraseUniqueScore(sorted_spoken_unique_words, x, amount_of_words))
+    dataframe = dataframe.sort_values(by=['Words_US'], ascending=False)
+    return dataframe
+
