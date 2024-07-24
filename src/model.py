@@ -1,3 +1,4 @@
+# model.py
 from transformers import WhisperProcessor, WhisperForConditionalGeneration, WhisperConfig
 
 # Define the WhisperProcessor and WhisperForConditionalGeneration

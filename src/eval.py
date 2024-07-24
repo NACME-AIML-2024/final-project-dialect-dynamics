@@ -10,6 +10,13 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 from datetime import datetime
 from jiwer import wer
+import argparse
+
+# Parse arguments
+parser = argparse.ArgumentParser(description='Evaluate ASR model')
+parser.add_argument('--batch_size', type=int, default=16, help='Batch size for evaluation')
+parser.add_argument('--subset', type=int, help='Subset size of the data')
+args = parser.parse_args()
 
 # Set device
 device = torch.device("cpu")  # Change to "mps" for MacBook with Metal Performance Shaders
@@ -22,7 +29,13 @@ audio_dir = os.path.join(root_dir, 'data/coraal/audio/wav/')
 paths_df = create_file_mapping(transcript_dir, audio_dir)
 combined_transcript_df = process_transcripts(paths_df)
 filtered_transcript_df = combined_transcript_df[~combined_transcript_df['Content'].str.contains(r'[\(\)\[\]/<>]')].reset_index(drop=True)
-data_subset = filtered_transcript_df.sample(150)
+
+# Use subset if specified
+if args.subset:
+    data_subset = filtered_transcript_df.sample(args.subset)
+else:
+    data_subset = filtered_transcript_df
+
 _, test_df = train_test_split(data_subset, test_size=0.2, random_state=42)
 
 # Initialize processor and model
@@ -31,7 +44,7 @@ model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-tiny.en"
 
 # Create dataset and dataloader
 test_dataset = AudioDataset(test_df, transcript_dir, audio_dir, processor)
-test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
 # Evaluation function
 def test(model, test_loader, processor, device):
