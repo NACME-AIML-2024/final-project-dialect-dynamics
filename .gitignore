@@ -12,6 +12,15 @@ notebooks/cifar_net.pth
 *.zip
 *.csv
 *.pdf
+svarah.tar
+
+# Folders
+output/weights/**
+output/metrics/**
+output/wordcloud/**
+
+
+
 
 # IPython
 profile_default/
