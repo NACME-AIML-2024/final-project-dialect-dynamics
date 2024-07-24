@@ -57,21 +57,23 @@ def fixLabels(dataframe, labels, column):
     dataframe.loc[dataframe[column] == broken, column] = fixed
   print(f"The labels are {dataframe[column].unique()}")
 
-def ratiosDictionary(labels, dataframe, category):
-    count = []
-    for i in labels:
-        counter = int(dataframe[dataframe[category] == i][category].count())
-        count.append(counter)
-    uniqueness_ratios = []
-    total_count = sum(count)
-    for i in count:
-        uniqueness_ratios.append(i/total_count)
-    return {labels[idx]:uniqueness_ratios[idx] for idx in range(len(labels))}
 
-def WeightUniquenessScoreCalculate(x, weight, ratios_dictionary):
-    return (1-ratios_dictionary[x])*weight
 
 def CategoricalUniquenessScoreGenerate(dataframe, category_list, weight_list):
+    def ratiosDictionary(labels, dataframe, category):
+        count = []
+        for i in labels:
+            counter = int(dataframe[dataframe[category] == i][category].count())
+            count.append(counter)
+        uniqueness_ratios = []
+        total_count = sum(count)
+        for i in count:
+            uniqueness_ratios.append(i/total_count)
+        return {labels[idx]:uniqueness_ratios[idx] for idx in range(len(labels))}
+
+    def WeightUniquenessScoreCalculate(x, weight, ratios_dictionary):
+        return (1-ratios_dictionary[x])*weight
+    
     if len(category_list) == len(weight_list):
         new_dataframe_labels = []
         for idx in range(len(category_list)):
@@ -83,6 +85,8 @@ def CategoricalUniquenessScoreGenerate(dataframe, category_list, weight_list):
         return dataframe.sort_values(by=['Total_US'], ascending=False)
     else:
         print("there needs to be one weight for every category, please try again")
+
+
 
 def ParetoScoreGenerate(dataframe):
     uniqueness_list = dataframe['Total_US'].to_list()
@@ -264,4 +268,74 @@ def WordsUniquenessScoreGenerate(dataframe, column_name):
     dataframe['Words_US'] = dataframe['Transcript_Words'].apply(lambda x: phraseUniqueScore(sorted_spoken_unique_words, x, amount_of_words))
     dataframe = dataframe.sort_values(by=['Words_US'], ascending=False)
     return dataframe
+
+
+
+def mergeUniqueScores(transcript_df, metadata_df, files_column, transcript_path_column, columns_list, transcript_dir):
+    text_files = metadata_df[files_column].unique()
+
+    for column in columns_list:
+        txt_file_unique_score = {}
+        for i in text_files:
+            txt_file_unique_score.update({f'{transcript_dir}{i}.txt' : float(metadata_df[metadata_df[files_column] == i][column].iloc[0])})
+        
+        transcript_df[column] = transcript_df['StTime'].copy()
+        for idx in range(len(text_files)):
+            iterative = transcript_df.loc[transcript_df[transcript_path_column] == f'{transcript_dir}{text_files[idx]}.txt'].index
+            for i in iterative:
+                transcript_df.loc[i, column] = txt_file_unique_score[f'{transcript_dir}{text_files[idx]}.txt']
+    
+    return transcript_df
+
+def CompleteUniquenessScoreGenerate(dataframe, weight_list, category_list):
+    indices = dataframe.index.to_list()
+    for idx in indices:
+        for idy in range(len(category_list)):
+            dataframe.loc[idx, category_list[idy]] = dataframe.loc[idx, category_list[idy]] * weight_list[idy]
+
+    dataframe['Total_US'] = dataframe[category_list].sum(axis=1)
+    dataframe = dataframe.sort_values(by=['Total_US'], ascending=False)
+    dataframe = ParetoScoreGenerate(dataframe)
+    dataframe.reset_index()
+    return(dataframe)
+
+def CombinedGridSearchWeights(dataframe, weight_matrix, category_list):
+    weight_matrix_update = []
+    for i in weight_matrix:
+        grab_list = []
+        for j in range(int((i[1]-i[0])/i[2])+1):
+            grab = "{:.2f}".format(i[0]+(j*i[2]))
+            grab_list.append(float(grab))
+        weight_matrix_update.append(grab_list)
+
+    complete_set = []
+    for items in product(*weight_matrix_update):
+        complete_set.append([list(items), 0])
+
+    weight_matrix_correction = []
+    for i in complete_set:
+        if sum(i[0]) == 100:
+            weight_matrix_correction.append(i)
+    complete_set = weight_matrix_correction
+    
+    min_score = 1000000000
+    max_score = 0
+    max_set_idx = 0
+    for idx in range(len(complete_set)):
+        df_use = dataframe.copy()
+        df_use.reset_index()
+        df_use = CompleteUniquenessScoreGenerate(df_use, complete_set[idx][0], category_list)
+        percentile_80_index  = int(df_use.__len__() * .8)
+        complete_set[idx][1] = df_use['pareto_distribution'][percentile_80_index]
+        if complete_set[idx][1] > max_score:
+            max_score = complete_set[idx][1]
+            max_set_idx = idx
+        if complete_set[idx][1] < min_score:
+            min_score = complete_set[idx][1]
+    
+    return complete_set[max_set_idx], complete_set
+
+
+
+############# We need a method to apply the weights to the US, grab the total US and get the pareto ############
 
