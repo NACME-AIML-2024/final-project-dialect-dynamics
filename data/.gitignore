@@ -11,12 +11,10 @@ notebooks/cifar_net.pth
 *.pptx
 *.zip
 *.csv
-*.tar.gz
-*.txt
-*.wav
-*.TextGrid
-*.tar
-*.json
+
+# Folders
+coraal/*
+svarah/*
 
 
 # IPython
