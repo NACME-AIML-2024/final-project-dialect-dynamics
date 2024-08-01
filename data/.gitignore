@@ -12,6 +12,11 @@ notebooks/cifar_net.pth
 *.zip
 *.csv
 
+# Folders
+coraal/*
+svarah/*
+
+
 # IPython
 profile_default/
 ipython_config.py
