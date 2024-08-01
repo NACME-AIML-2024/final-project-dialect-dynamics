@@ -89,7 +89,6 @@ The Corpus of Regional African American Language (CORAAL) is a comprehensive dat
 
 ### Fine-tuning Workflow
 <div align="justified">
-  <p>
     <div align="center">
       <img width="900" alt="Screenshot 2024-08-01 at 9 34 15 AM" src="https://github.com/user-attachments/assets/9c08969e-efa7-41df-a496-3acf8e014968">
   </div>
@@ -112,7 +111,85 @@ The Corpus of Regional African American Language (CORAAL) is a comprehensive dat
   </p>
 </div>
 
-### For more information...
-Feel free to contact us at any time or reach out via this repo
+### Preliminary Results
+<div align="center">
 
+| Model Type                     | Sample Quantity | Loss       | Word Error Rate |
+|--------------------------------|------------------|------------|------------------|
+| **Pre-trained IAE-tested**      | 680,000 hrs      | 4.3300     | 0.2786           |
+| **Pre-trained AAVE-tested**     | 680,000 hrs      | *0.0192    | *0.4234          |
+| **IAE-trained**                 | 9.6 hrs          | 4.4142     | 0.2746           |
+| **AAVE-trained**                | 8.620 hrs        | *0.2746    | *0.3504          |
 
+**Inference ran on a small subset due to resource-limitations and timeline constraints.*
+
+</div>
+
+<div align="justified">  
+  The preliminary results of our study reveal promising trends in the fine-tuning process of the Whisper model for accented speech recognition. The Training Loss per Epoch graph demonstrates a steady decline in training loss as the number of epochs increases, indicating effective learning and improved performance on the training data. This trend is mirrored in the Training Word Error Rate (WER) per Epoch graph, which shows a consistent decrease in WER, reflecting enhanced accuracy in the model's predictions during training.
+  <div align="center">
+    <img width="900" alt="Screenshot 2024-08-01 at 9 34 15 AM" src="https://github.com/user-attachments/assets/d61ffef5-c779-43c0-acf3-23c46be1c99f">
+  </div>
+  <p>
+  </p>
+  The validation metrics further support these positive outcomes. The Validation Loss per Epoch graph exhibits a general downward trend, although with some fluctuations, suggesting that the model is performing well on unseen validation data. These variations indicate that additional tuning may be required to stabilize the learning process. Similarly, the Validation Word Error Rate (WER) per Epoch graph shows a declining trend with some variability, highlighting areas where model adjustments or more data could improve consistency and overall performance.
+  <div align="center">
+    <img width="900" alt="Screenshot 2024-08-01 at 9 34 15 AM" src="https://github.com/user-attachments/assets/bc567be8-ac2b-4171-8ae7-093526c57912">
+  </div>
+  <p>
+  </p>
+  </p>
+</div>
+
+### Conclusion and Discussion
+1. The models demonstrate no significant performance or accuracy difference between pre-trained and IAAE-trained model. However, significantly different sizes of data were used in each model.
+1. Results suggest potential of diverse English accents in training datasets can enhance ASR technology, making it more inclusive and accurate.
+1. Use of IAAE dataset in our ASR model suggest potential for ASR systems to be tailored to better serve underrepresented speech patterns, thereby addressing equity issues in technology.
+1. Detailed error analysis revealed common transcription errors related to specific phonetic nuances of IAAE, guiding future model enhancements
+
+### Future Work
+1. Perform fine-tuning on AAVE Speech and compare performance against SOTA AAVE-trained models.
+1. Extend research on other accented English. (Latin American, European, etc.)
+1. Explore optimization techniques for model performance on resource-limited environments.
+1. Develop mechanisms to apply user-feedback for continuous fine-tuning of evolving speech patterns.
+
+### Usage Instructions
+1. `Pending`
+
+### Poster Presentation
+<div align="center">
+
+  ***Poster Presentation was showcased on August 2nd, 2024 at the University of Southern California Viterbi School of Engineering Research Symposium.***
+  
+  <img width="3401" alt="image" src="https://github.com/user-attachments/assets/1375b666-d96a-4e7b-bcba-f8b3ea0d0f6c">
+</div>
+
+### Oral Presentation
+<div align="center">
+
+  ***Oral Presentation was showcased on August 1st, 2024 at the NACME Apple Artificial Intelligence-Machine Learning Intensive Bootcamp 2024 Final Project Showcase.***
+  
+  <img width="1470" alt="Screenshot 2024-08-01 at 12 22 48 PM 1" src="https://github.com/user-attachments/assets/72437b89-0ca9-478e-a979-3e46a01eb8df">
+</div>
+
+### References
+1. J. Baugh, *Beyond Ebonics: Linguistic Pride and Racial Prejudice*. Oxford University Press, 2000.
+2. W. Labov, *Language in the Inner City: Studies in the Black English Vernacular*. University of Pennsylvania Press, 1972.
+3. J. R. Rickford, *African American Vernacular English: Features, Evolution, Educational Implications*. Wiley-Blackwell, 1999.
+4. D. S. Ureña and K. Schindler, "CORAAL: The Corpus of Regional African American Language," University of Oregon, 2022. [Online]. Available: https://oraal.uoregon.edu/coraal. [Accessed: 01-Aug-2024].
+5. AI4Bharat, "Svarah: A Large Scale Indic Speech Recognition Dataset," 2022. [Online]. Available: https://github.com/AI4Bharat/Svarah. [Accessed: 01-Aug-2024].
+6. G. Hinton, O. Vinyals, and J. Dean, "Distilling the Knowledge in a Neural Network," *arXiv preprint arXiv:1503.02531*, 2015.
+7. A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, and I. Polosukhin, "Attention is all you need," in *Advances in Neural Information Processing Systems*, 2017, pp. 5998-6008.
+8. A. Radford, K. Narasimhan, T. Salimans, and I. Sutskever, "Improving Language Understanding by Generative Pre-Training," *OpenAI*, 2018.
+9. A. Baevski, Y. Zhou, A. Mohamed, and M. Auli, "wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations," in *Advances in Neural Information Processing Systems*, 2020.
+10. Y. Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis, L. Zettlemoyer, and V. Stoyanov, "RoBERTa: A Robustly Optimized BERT Pretraining Approach," *arXiv preprint arXiv:1907.11692*, 2019.
+11. J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding," *arXiv preprint arXiv:1810.04805*, 2018.
+12. S. Karita, N. Chen, T. Hayashi, T. Hori, H. Inaguma, Z. Jiang, M. Someki, N. S. Moritz, P. W. Chan, and S. Watanabe, "A Comparative Study on Transformer vs RNN in Speech Applications," *arXiv preprint arXiv:1909.06317*, 2019.
+13. A. Gulati, J. Qin, C.-C. Chiu, N. Parmar, Y. Zhang, J. Yu, W. Han, S. Wang, Z. Zhang, Y. Wu, and R. Pang, "Conformer: Convolution-augmented Transformer for Speech Recognition," *arXiv preprint arXiv:2005.08100*, 2020.
+14. S. Wang, Y. Wu, X. Xu, Y. Xie, Y. Zhang, and H. Meng, "Fine-tuning Bidirectional Encoder Representations from Transformers (BERT) for Context-Dependent End-to-End ASR," *IEEE/ACM Transactions on Audio, Speech, and Language Processing*, vol. 29, pp. 2938-2950, 2021.
+15. Kaldi ASR Toolkit, "Kaldi: A toolkit for speech recognition," 2011. [Online]. Available: http://kaldi-asr.org. [Accessed: 01-Aug-2024].
+16. A. Graves, A.-R. Mohamed, and G. Hinton, "Speech recognition with deep recurrent neural networks," in *2013 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)*, 2013, pp. 6645-6649.
+17. A. Hannun, C. Case, J. Casper, B. Catanzaro, G. Diamos, E. Elsen, R. Prenger, S. Satheesh, S. Sengupta, A. Coates, and A. Ng, "Deep Speech: Scaling up end-to-end speech recognition," *arXiv preprint arXiv:1412.5567*, 2014.
+18. W. Chan, N. Jaitly, Q. V. Le, and O. Vinyals, "Listen, attend and spell: A neural network for large vocabulary conversational speech recognition," in *2016 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)*, 2016, pp. 4960-4964.
+19. S. Niu, B. Tang, Z. Cheng, X. Chen, J. Zeng, Y. Huangfu, and H. Meng, "Improving Speech Recognition Systems for Accented English Speech with Multi-Accent Data Augmentation," *IEEE/ACM Transactions on Audio, Speech, and Language Processing*, vol. 28, pp. 1679-1692, 2020.
+20. R. Maas and D. Hovy, "Adapting Deep Learning Models for Accented Speech Recognition," in *Proceedings of the AAAI Conference on Artificial Intelligence*, vol. 34, no. 05, pp. 7969-7976, 2020.
